@@ -599,6 +599,25 @@ function buildIndex(){
   Object.values(DATA.pemasukan || {}).forEach(item => {
     if(!item || typeof item !== 'object') return;
     const d = ymd(item.tgl); if(!d) return;
+    // Uang Masuk manual yang diarahkan ke "Uang Minuman" (masukKe === 'minuman')
+    // tampil & dihitung di bagian Minuman, sama seperti di admin (bukan di Sewa Lapangan).
+    if(item.masukKe === 'minuman'){
+      const mt = payTotal(item,1) + payTotal(item,2);
+      const mc = payCash(item,1) + payCash(item,2);
+      const mn = payNon(item,1) + payNon(item,2);
+      const mm = [];
+      [1,2].forEach(n => payParts(item,n).forEach(p => { if(p.jumlah > 0 && !mm.includes(p.metode)) mm.push(p.metode); }));
+      const mmet = item.metode1 || item.metode || 'Cash';
+      dayObj(d).min.push({
+        title: item.ket || 'Uang Masuk',
+        tag: 'Uang Masuk', tagCls: '',
+        metode: mm.length ? mm.join(' + ') : mmet,
+        amount: mt, cash: mc, non: mn,
+        free: mt === 0 && NOVALUE.includes(mmet),
+        note: ''
+      });
+      return;
+    }
     const kk = Number(item.totalKaosKaki || 0);
     const t1 = payTotal(item,1), t2 = payTotal(item,2);
     const amount = t1 + t2 + kk;
